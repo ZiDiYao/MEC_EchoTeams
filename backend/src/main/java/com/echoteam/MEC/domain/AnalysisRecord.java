@@ -1,74 +1,68 @@
-package com.echoteam.MEC.dto;
+package com.echoteam.MEC.domain;
+
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 
-public class AnalysisResponse {
+@Entity
+@Table(name = "analysis_record",
+        indexes = {
+                @Index(name="idx_phone_time", columnList = "phoneNumber,timeReported DESC"),
+                @Index(name="idx_request_id", columnList = "requestId", unique = true)
+        })
+public class AnalysisRecord {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true, length = 80)
     private String requestId;
-    private String phoneNumber;
-    private String callerName;
 
+    @Column(nullable = false, length = 32)
+    private String phoneNumber;
+
+    @Column(nullable = false)
     private Instant timeReported;
+
+    private String callerName;
     private String incidentType;
+
+    @Column(length = 1000)
     private String incidentDescription;
+
     private String address;
     private String landmark;
+
     private Integer victimCount;
+
+    @Column(length = 500)
     private String victimDescription;
+
     private String injurySeverity;
+
     private Boolean isConscious;
     private Boolean isBreathing;
     private Boolean isOngoing;
     private Boolean isFire;
-    private Integer urgencyLevel;
+
+    private Integer urgencyLevel;   // 1..100
+    private Integer confidence;     // 0..100
+
+    @ElementCollection
+    @CollectionTable(name="analysis_record_keyphrases", joinColumns=@JoinColumn(name="record_id"))
+    @Column(name="key_phrase")
     private List<String> keyPhrases;
-    private int confidence;
+
     private String processedBy;
 
-    public AnalysisResponse() {}
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
 
-    public AnalysisResponse(
-            String requestId,
-            String phoneNumber,
-            String callerName,
 
-            Instant timeReported,
-            String incidentType,
-            String incidentDescription,
-            String address,
-            String landmark,
-            Integer victimCount,
-            String victimDescription,
-            String injurySeverity,
-            Boolean isConscious,
-            Boolean isBreathing,
-            Boolean isOngoing,
-            Boolean isFire,
-            Integer urgencyLevel,
-            List<String> keyPhrases,
-            int confidence,
-            String processedBy) {
-        this.requestId = requestId;
-        this.phoneNumber = phoneNumber;
-        this.callerName = callerName;
-        this.timeReported = timeReported;
-        this.incidentType = incidentType;
-        this.incidentDescription = incidentDescription;
-        this.address = address;
-        this.landmark = landmark;
-        this.victimCount = victimCount;
-        this.victimDescription = victimDescription;
-        this.injurySeverity = injurySeverity;
-        this.isConscious = isConscious;
-        this.isBreathing = isBreathing;
-        this.isOngoing = isOngoing;
-        this.isFire = isFire;
-        this.urgencyLevel = urgencyLevel;
-        this.keyPhrases = keyPhrases;
-        this.confidence = confidence;
-        this.processedBy = processedBy;
-    }
+    // getter and setter
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public String getRequestId() { return requestId; }
     public void setRequestId(String requestId) { this.requestId = requestId; }
@@ -76,11 +70,11 @@ public class AnalysisResponse {
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public String getCallerName() { return callerName; }
-    public void setCallerName(String callerName) { this.callerName = callerName; }
-
     public Instant getTimeReported() { return timeReported; }
     public void setTimeReported(Instant timeReported) { this.timeReported = timeReported; }
+
+    public String getCallerName() { return callerName; }
+    public void setCallerName(String callerName) { this.callerName = callerName; }
 
     public String getIncidentType() { return incidentType; }
     public void setIncidentType(String incidentType) { this.incidentType = incidentType; }
@@ -118,38 +112,15 @@ public class AnalysisResponse {
     public Integer getUrgencyLevel() { return urgencyLevel; }
     public void setUrgencyLevel(Integer urgencyLevel) { this.urgencyLevel = urgencyLevel; }
 
+    public Integer getConfidence() { return confidence; }
+    public void setConfidence(Integer confidence) { this.confidence = confidence; }
+
     public List<String> getKeyPhrases() { return keyPhrases; }
     public void setKeyPhrases(List<String> keyPhrases) { this.keyPhrases = keyPhrases; }
-
-    public int getConfidence() { return confidence; }
-    public void setConfidence(int confidence) { this.confidence = confidence; }
 
     public String getProcessedBy() { return processedBy; }
     public void setProcessedBy(String processedBy) { this.processedBy = processedBy; }
 
-    // ===== toString =====
-    @Override
-    public String toString() {
-        return "AnalysisResponse{" +
-                "requestId='" + requestId + '\'' +
-                ", phoneNumber='" + phoneNumber + '\'' +
-                ", callerName='" + callerName + '\'' +
-                ", timeReported=" + timeReported +
-                ", incidentType='" + incidentType + '\'' +
-                ", incidentDescription='" + incidentDescription + '\'' +
-                ", address='" + address + '\'' +
-                ", landmark='" + landmark + '\'' +
-                ", victimCount=" + victimCount +
-                ", victimDescription='" + victimDescription + '\'' +
-                ", injurySeverity='" + injurySeverity + '\'' +
-                ", isConscious=" + isConscious +
-                ", isBreathing=" + isBreathing +
-                ", isOngoing=" + isOngoing +
-                ", isFire=" + isFire +
-                ", urgencyLevel=" + urgencyLevel +
-                ", keyPhrases=" + keyPhrases +
-                ", confidence=" + confidence +
-                ", processedBy='" + processedBy + '\'' +
-                '}';
-    }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

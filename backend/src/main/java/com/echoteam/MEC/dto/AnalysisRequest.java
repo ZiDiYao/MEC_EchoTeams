@@ -1,17 +1,16 @@
 package com.echoteam.MEC.dto;
 
-import java.sql.Timestamp;
+import java.time.Instant;
 
 public class AnalysisRequest {
 
     private String transcript;
     private String phoneNumber;
-    /** Optional: time when the report was received on client side */
-    private Timestamp timeReported;
+    private Instant timeReported;
 
     public AnalysisRequest() {}
 
-    public AnalysisRequest(String transcript, String phoneNumber, Timestamp timeReported) {
+    public AnalysisRequest(String transcript, String phoneNumber, Instant timeReported) {
         this.transcript = transcript;
         this.phoneNumber = phoneNumber;
         this.timeReported = timeReported;
@@ -23,6 +22,6 @@ public class AnalysisRequest {
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public Timestamp getTimeReported() { return timeReported; }
-    public void setTimeReported(Timestamp timeReported) { this.timeReported = timeReported; }
+    public Instant getTimeReported() { return timeReported; }
+    public void setTimeReported(Instant timeReported) { this.timeReported = timeReported; }
 }

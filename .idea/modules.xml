@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/backend/MEC_EchoTeam.iml" filepath="$PROJECT_DIR$/backend/MEC_EchoTeam.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/MEC_EchoTeams.iml" filepath="$PROJECT_DIR$/.idea/MEC_EchoTeams.iml" />
     </modules>
   </component>

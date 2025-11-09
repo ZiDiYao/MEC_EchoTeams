@@ -43,6 +43,63 @@ function LoadingOverlay({ text = "Analyzing… please wait" }) {
         <div className="overlay-text">{text}</div>
       </div>
     </div>
+import VoiceBars from "./components/voiceBar";
+
+function useRecorder() {
+  const [recState, setRecState] = useState("idle");
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioBlob, setAudioBlob] = useState(null);
+
+  const start = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mr = new MediaRecorder(stream);
+    const chunks = [];
+    mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    mr.onstop = () => {
+      const blob = new Blob(chunks, { type: "audio/webm" });
+      setAudioBlob(blob);
+    };
+    mr.start();
+    setMediaRecorder(mr);
+    setRecState("recording");
+  };
+
+  const stop = () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach((t) => t.stop());
+      setRecState("stopped");
+    }
+  };
+
+  const resume = () => {
+    if (mediaRecorder && mediaRecorder.state === "paused") {
+      mediaRecorder.resume();
+      setRecState("recording");
+    }
+  };
+
+  return { recState, audioBlob, start, stop, resume };
+}
+
+function Sidebar({ items, activeId, onSelect, onNew }) {
+  return (
+    <aside className="sidebar">
+      <div className="sidebar-header">Conversations</div>
+      <button className="new-btn" onClick={onNew}>+ New</button>
+      <div className="sidebar-list">
+        {items.length === 0 && <div className="empty">No history yet</div>}
+        {items.map((it) => (
+          <button
+            key={it.id}
+            className={`sidebar-item ${it.id === activeId ? "active" : ""}`}
+            onClick={() => onSelect(it.id)}
+          >
+            {it.title || "Untitled"}
+          </button>
+        ))}
+      </div>
+    </aside>
   );
 }
 
@@ -145,6 +202,9 @@ export default function App() {
           {/* 左侧空隙占位，保证左右对齐美观，可按需移除 */}
           <div style={{ flex: 1 }} />
 
+          <div>
+            <VoiceBars />
+          </div>
           <div className="actions">
             {recState === "recording" ? (
               <button className="danger" onClick={stop} disabled={loading}>Stop</button>
