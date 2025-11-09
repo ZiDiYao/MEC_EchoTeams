@@ -5,6 +5,7 @@ import "./index.css";
 import Note from "./components/Note";
 import Transcript from "./components/Transcript";
 import Alsummary from "./components/AIsummary";
+import VoiceBars from "./components/voiceBar";
 
 function useRecorder() {
   const [recState, setRecState] = useState("idle");
@@ -162,7 +163,9 @@ export default function App() {
               Transcript
             </button>
           </div>
-          
+          <div>
+            <VoiceBars />
+          </div>
           <div className="actions">
             {recState === "recording" ? (
               <button className="danger" onClick={stop}>Stop</button>
