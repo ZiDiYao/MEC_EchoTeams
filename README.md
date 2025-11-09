@@ -96,11 +96,6 @@ POST http://localhost:8080/api/analyze
 
 ---
 
-# Demonstration 
-
-
----
-
 ## 1. Layout Overview
 
 These screenshots show the structure and user flow of the system interface.
@@ -112,6 +107,7 @@ These screenshots show the structure and user flow of the system interface.
 |![Result Example](./result_return01.jpg)| The result return|
 
 ---
+
 
 
 
