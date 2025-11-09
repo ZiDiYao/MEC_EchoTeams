@@ -4,9 +4,11 @@ import "./App.css";
 import "./index.css";
 import Note from "./components/Note";
 import Transcript from "./components/Transcript";
-import Alsummary from "./components/AIsummary";
+import AIsummary from "./components/AIsummary";
 import Sidebar from "./components/Sidebar";
 import useRecorder from "./components/useRecorder";
+// 如果已经有 Jeff 的组件就解注释下一行，并把 USE_VOICEBARS = true
+import VoiceBars from "./components/voiceBar";
 
 /* 占位的音量条（等 Jeff 的真组件到位后替换） */
 function VoiceBarPlaceholder() {
@@ -43,63 +45,6 @@ function LoadingOverlay({ text = "Analyzing… please wait" }) {
         <div className="overlay-text">{text}</div>
       </div>
     </div>
-import VoiceBars from "./components/voiceBar";
-
-function useRecorder() {
-  const [recState, setRecState] = useState("idle");
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [audioBlob, setAudioBlob] = useState(null);
-
-  const start = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mr = new MediaRecorder(stream);
-    const chunks = [];
-    mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-    mr.onstop = () => {
-      const blob = new Blob(chunks, { type: "audio/webm" });
-      setAudioBlob(blob);
-    };
-    mr.start();
-    setMediaRecorder(mr);
-    setRecState("recording");
-  };
-
-  const stop = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      mediaRecorder.stream.getTracks().forEach((t) => t.stop());
-      setRecState("stopped");
-    }
-  };
-
-  const resume = () => {
-    if (mediaRecorder && mediaRecorder.state === "paused") {
-      mediaRecorder.resume();
-      setRecState("recording");
-    }
-  };
-
-  return { recState, audioBlob, start, stop, resume };
-}
-
-function Sidebar({ items, activeId, onSelect, onNew }) {
-  return (
-    <aside className="sidebar">
-      <div className="sidebar-header">Conversations</div>
-      <button className="new-btn" onClick={onNew}>+ New</button>
-      <div className="sidebar-list">
-        {items.length === 0 && <div className="empty">No history yet</div>}
-        {items.map((it) => (
-          <button
-            key={it.id}
-            className={`sidebar-item ${it.id === activeId ? "active" : ""}`}
-            onClick={() => onSelect(it.id)}
-          >
-            {it.title || "Untitled"}
-          </button>
-        ))}
-      </div>
-    </aside>
   );
 }
 
@@ -114,7 +59,11 @@ export default function App() {
     const raw = localStorage.getItem("mec_sessions");
     return raw ? JSON.parse(raw) : [];
   });
-  const [activeId, setActiveId] = useState(() => sessions[0]?.id || null);
+  const [activeId, setActiveId] = useState(() => {
+    const raw = localStorage.getItem("mec_sessions");
+    const arr = raw ? JSON.parse(raw) : [];
+    return arr[0]?.id || null;
+  });
 
   const { recState, audioBlob, start, stop, resume } = useRecorder();
   const [loading, setLoading] = useState(false);
@@ -128,7 +77,13 @@ export default function App() {
     document.body.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
+  // 会把历史记录持久化
+  useEffect(() => {
+    localStorage.setItem("mec_sessions", JSON.stringify(sessions));
+  }, [sessions]);
+
   const USE_MOCK = true;
+  const USE_VOICEBARS = true; // 如果已经有 Jeff 的 VoiceBars，改成 true 并引入
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -156,10 +111,13 @@ export default function App() {
   };
 
   function applyResult(data) {
-    setSummary(data.summary || "No summary from backend.");
+    const finalSummary = data.summary || "No summary from backend.";
+    setSummary(finalSummary);
+
     const id = crypto.randomUUID();
     const title = data.title || `Case ${new Date().toLocaleString()}`;
-    const newItem = { id, title, note, transcript, summary: data.summary || "" };
+    const newItem = { id, title, note, transcript, summary: finalSummary };
+
     setSessions((prev) => [newItem, ...prev]);
     setActiveId(id);
     setIsSubmitted(true);
@@ -174,7 +132,7 @@ export default function App() {
     setTranscript(s.transcript || "");
     setSummary(s.summary || "");
     setIsSubmitted(!!s.summary);
-    setShowSummary(!!s.summary); // 打开查看
+    setShowSummary(!!s.summary);
   };
 
   const handleNew = () => {
@@ -198,22 +156,21 @@ export default function App() {
       <main className="main">
         <header className="topbar">
           <div className="title">Generate Title</div>
-
-          {/* 左侧空隙占位，保证左右对齐美观，可按需移除 */}
           <div style={{ flex: 1 }} />
 
           <div>
-            <VoiceBars />
-          </div>
-          <div className="actions">
-            {recState === "recording" ? (
-              <button className="danger" onClick={stop} disabled={loading}>Stop</button>
-            ) : recState === "paused" ? (
-              <button onClick={resume} disabled={loading}>Resume</button>
+            {USE_VOICEBARS ? (
+              <><div className="voicebar-wrapper">
+              <VoiceBars />
+                </div> 
+                <div /> 
+              </> // 占位，避免未引入时报错
             ) : (
-              <button onClick={start} disabled={loading}>Record</button>
+              <VoiceBarPlaceholder />
             )}
+          </div>
 
+          <div className="actions">
             <button className="primary" onClick={handleSubmit} disabled={loading}>
               {loading ? "Loading..." : "Submit"}
             </button>
@@ -227,7 +184,6 @@ export default function App() {
               {darkMode ? "Day Mode" : "Night Mode"}
             </button>
 
-            {/* Submit 后显示 Summary 入口（弹窗） */}
             {isSubmitted && (
               <button className="tab" onClick={() => setShowSummary(true)}>
                 Summary
@@ -239,7 +195,7 @@ export default function App() {
         {/* 两栏布局：左 Note + 右 Transcript */}
         <section className="two-col">
           <div className="col left">
-            <VoiceBarPlaceholder />
+            {/* 如果上面 header 已经有 VoiceBar，就可以把这里的 Placeholder 删掉 */}
             <Note
               value={note}
               onChange={setNote}
@@ -256,7 +212,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* 音频预览（可保留） */}
+        {/* 音频预览 */}
         {audioBlob && (
           <div style={{ padding: "10px 16px" }}>
             <p>🎧 录音预览：</p>

@@ -68,3 +68,7 @@ body.dark, .app-shell.dark {
   font-size: 20px;
 }
 
+.voicebar-wrapper {
+  margin-right: 24px;
+}
+
