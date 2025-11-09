@@ -48,7 +48,53 @@ function LoadingOverlay({ text = "Analyzing… please wait" }) {
   );
 }
 
+function safe(v, fallback = "Unknown") {
+  if (v === undefined || v === null) return fallback;
+  if (typeof v === "string" && v.trim() === "") return fallback;
+  return v;
+}
+
+function formatTime(iso) {
+  try { return new Date(iso).toLocaleString(); } catch { return "Unknown time"; }
+}
+
+/** 统一规整后端结果 -> { title, summary }（标题=电话+事件+时间戳） */
+function normalizeResult(raw, { phoneNumber, transcript }) {
+  const incidentType = raw.incidentType || raw.type || raw.category || "Case";
+  const address      = raw.address || raw.location || "";
+  const victims      = raw.victimCount ?? raw.victims ?? raw.peopleInvolved;
+  const urgency      = raw.urgencyLevel ?? raw.urgency ?? raw.priority;
+  const confidence   = raw.confidence ?? raw.score;
+  const timeReported = raw.timeReported || new Date().toISOString();
+  const aiSummary    = raw.summary || raw.incidentDescription || "";
+
+  // === Title：Phone · Incident · LocalTime ===
+  const phoneForTitle = safe(phoneNumber, "No-Phone");
+  const timeForTitle  = formatTime(timeReported);
+  const title = `${phoneForTitle} · ${incidentType} · ${timeForTitle}`;
+
+  // === Summary：结构化要点（有则填、无则略） ===
+  const lines = [
+    `# ${incidentType}`,
+    address ? `📍 Address: ${address}` : null,
+    victims !== undefined ? `🧑‍🤝‍🧑 Victims: ${victims}` : null,
+    urgency !== undefined ? `🚨 Urgency: ${urgency}` : null,
+    confidence !== undefined ? `✅ Confidence: ${confidence}%` : null,
+    `🕒 Reported: ${formatTime(timeReported)}`,
+    "",
+    "## AI Summary",
+    aiSummary || "No summary from backend.",
+    "",
+    "## Original Transcript (short)",
+    transcript?.slice(0, 400) ? transcript.slice(0, 400) + (transcript.length > 400 ? " …" : "") : "N/A",
+  ].filter(Boolean);
+
+  return { title, summary: lines.join("\n") };
+}
+
+
 export default function App() {
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [note, setNote] = useState("");
   const [transcript, setTranscript] = useState("");
   const [summary, setSummary] = useState("");
@@ -82,26 +128,56 @@ export default function App() {
     localStorage.setItem("mec_sessions", JSON.stringify(sessions));
   }, [sessions]);
 
-  const USE_MOCK = true;
+  const USE_MOCK = false;
   const USE_VOICEBARS = true; // 如果已经有 Jeff 的 VoiceBars，改成 true 并引入
 
   const handleSubmit = async () => {
-    setLoading(true);
     try {
+      // ===== 1️⃣ 前端校验 =====
+      if (!transcript || !transcript.trim()) {
+        alert("Transcript is empty. Please record or paste text before submitting.");
+        return;
+      }
+
+      setLoading(true);
       let data;
+
+      // ===== 2️⃣ MOCK 或真实请求 =====
       if (USE_MOCK) {
         const resp = await fetch("/mock/submit.json");
         data = await resp.json();
       } else {
-        const resp = await fetch("/api/submit", {
+        const resp = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ note, transcript }),
+          body: JSON.stringify({
+            transcript,
+            phoneNumber: phoneNumber || null,
+            timeReported: new Date().toISOString(),
+          }),
         });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        data = await resp.json();
+
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => "");
+          throw new Error(`HTTP ${resp.status}${text ? " - " + text : ""}`);
+        }
+
+        data = await resp.json(); // ✅ 这里不再用 const，避免作用域错误
       }
-      applyResult(data);
+
+      console.log("[/api/analyze] response:", data);
+
+      // ===== 3️⃣ 转换后端返回为前端展示格式 =====
+      const { title, summary } = normalizeResult(data, { phoneNumber, transcript });
+
+      // ===== 4️⃣ 更新前端状态 =====
+      setSummary(summary);
+      const id = crypto.randomUUID();
+      const newItem = { id, title, note, transcript, summary, createdAt: new Date().toISOString() };
+      setSessions((prev) => [newItem, ...prev]);
+      setActiveId(id);
+      setIsSubmitted(true);
+      setShowSummary(true);
     } catch (e) {
       console.error(e);
       alert(`Submit failed.\n\n${e.message}\n(See console/Network for details)`);
@@ -110,18 +186,17 @@ export default function App() {
     }
   };
 
+
   function applyResult(data) {
-    const finalSummary = data.summary || "No summary from backend.";
-    setSummary(finalSummary);
+    const { title, summary } = normalizeResult(data, { phoneNumber, transcript });
+    setSummary(summary);
 
     const id = crypto.randomUUID();
-    const title = data.title || `Case ${new Date().toLocaleString()}`;
-    const newItem = { id, title, note, transcript, summary: finalSummary };
-
+    const newItem = { id, title, note, transcript, summary, createdAt: new Date().toISOString() };
     setSessions((prev) => [newItem, ...prev]);
     setActiveId(id);
     setIsSubmitted(true);
-    setShowSummary(true); // 直接打开弹窗
+    setShowSummary(true);
   }
 
   const handleLoadFromHistory = (id) => {
@@ -171,6 +246,13 @@ export default function App() {
           </div>
 
           <div className="actions">
+              <input
+                type="tel"
+                placeholder="Phone (optional)"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                style={{ marginRight: 8, padding: "6px 8px", borderRadius: 6, border: "1px solid #ddd" }}
+              />
             <button className="primary" onClick={handleSubmit} disabled={loading}>
               {loading ? "Loading..." : "Submit"}
             </button>
