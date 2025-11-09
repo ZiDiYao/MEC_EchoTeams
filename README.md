@@ -20,6 +20,7 @@ McMaster University • Sun NOV 9 2025
 ## Current Stage
 
 Right now, only **DeepSeek API** is enabled (because OpenAI tokens are priced like caviar 🐟).  
+You Must upload the phone Number !!!!! 
 
 ---
 
@@ -115,6 +116,7 @@ These screenshots show the structure and user flow of the system interface.
 |![History example](./History02.jpg)| The history example02, which is more detailed|
 
 ---
+
 
 
 
