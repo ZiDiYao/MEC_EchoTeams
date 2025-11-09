@@ -5,9 +5,65 @@ import "./index.css";
 import Note from "./components/Note";
 import Transcript from "./components/Transcript";
 import Alsummary from "./components/AIsummary";
-import Sidebar from "./components/Sidebar";
-import useRecorder from "./components/useRecorder";
-import LoadingOverlay from "./components/LoadingOverlay";
+import VoiceBars from "./components/voiceBar";
+
+function useRecorder() {
+  const [recState, setRecState] = useState("idle");
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioBlob, setAudioBlob] = useState(null);
+
+  const start = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mr = new MediaRecorder(stream);
+    const chunks = [];
+    mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    mr.onstop = () => {
+      const blob = new Blob(chunks, { type: "audio/webm" });
+      setAudioBlob(blob);
+    };
+    mr.start();
+    setMediaRecorder(mr);
+    setRecState("recording");
+  };
+
+  const stop = () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach((t) => t.stop());
+      setRecState("stopped");
+    }
+  };
+
+  const resume = () => {
+    if (mediaRecorder && mediaRecorder.state === "paused") {
+      mediaRecorder.resume();
+      setRecState("recording");
+    }
+  };
+
+  return { recState, audioBlob, start, stop, resume };
+}
+
+function Sidebar({ items, activeId, onSelect, onNew }) {
+  return (
+    <aside className="sidebar">
+      <div className="sidebar-header">Conversations</div>
+      <button className="new-btn" onClick={onNew}>+ New</button>
+      <div className="sidebar-list">
+        {items.length === 0 && <div className="empty">No history yet</div>}
+        {items.map((it) => (
+          <button
+            key={it.id}
+            className={`sidebar-item ${it.id === activeId ? "active" : ""}`}
+            onClick={() => onSelect(it.id)}
+          >
+            {it.title || "Untitled"}
+          </button>
+        ))}
+      </div>
+    </aside>
+  );
+}
 
 export default function App() {
   // 默认从 note 开始（Submit 前不显示 summary）
@@ -139,6 +195,9 @@ export default function App() {
             )}
           </div>
 
+          <div>
+            <VoiceBars />
+          </div>
           <div className="actions">
             {recState === "recording" ? (
               <button className="danger" onClick={stop}>Stop</button>

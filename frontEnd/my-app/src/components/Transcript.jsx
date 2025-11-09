@@ -1,6 +1,7 @@
 // src/components/Transcript.jsx
 import React, { useRef, useState } from 'react';
 import { pipeline, env} from '@xenova/transformers';
+
 env.allowLocalModels = false;
 env.useBrowserCache = false;
 console.log("Transformers version:", require("@xenova/transformers/package.json").version);
@@ -44,7 +45,7 @@ export default function Transcript({ text, onChange, placeholder }) {
   }
 
   async function stopRecording() {
-    setStatus("⏳ Processing...");
+    setStatus(" Processing...");
     setRecording(false);
 
     const mr = mediaRecorderRef.current;
@@ -75,7 +76,6 @@ export default function Transcript({ text, onChange, placeholder }) {
         const output = await whisper(pcm);
         console.log("Output:", output);
         setTranscript(output.text);
-        setStatus("✅ Done");
       } catch (err) {
         console.error(err);
         setStatus("❌ Error: " + err.message);
@@ -85,7 +85,6 @@ export default function Transcript({ text, onChange, placeholder }) {
 
   return (
     <div>
-      <h2>🎧 Whisper 前端语音转文字 Demo</h2>
       <p>{status}</p>
       <div style={{ marginBottom: "12px" }}>
         {!recording ? (
