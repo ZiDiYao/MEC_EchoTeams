@@ -5,67 +5,13 @@ import "./index.css";
 import Note from "./components/Note";
 import Transcript from "./components/Transcript";
 import Alsummary from "./components/AIsummary";
-
-function useRecorder() {
-  const [recState, setRecState] = useState("idle");
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [audioBlob, setAudioBlob] = useState(null);
-
-  const start = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mr = new MediaRecorder(stream);
-    const chunks = [];
-    mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-    mr.onstop = () => {
-      const blob = new Blob(chunks, { type: "audio/webm" });
-      setAudioBlob(blob);
-    };
-    mr.start();
-    setMediaRecorder(mr);
-    setRecState("recording");
-  };
-
-  const stop = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      mediaRecorder.stream.getTracks().forEach((t) => t.stop());
-      setRecState("stopped");
-    }
-  };
-
-  const resume = () => {
-    if (mediaRecorder && mediaRecorder.state === "paused") {
-      mediaRecorder.resume();
-      setRecState("recording");
-    }
-  };
-
-  return { recState, audioBlob, start, stop, resume };
-}
-
-function Sidebar({ items, activeId, onSelect, onNew }) {
-  return (
-    <aside className="sidebar">
-      <div className="sidebar-header">Conversations</div>
-      <button className="new-btn" onClick={onNew}>+ New</button>
-      <div className="sidebar-list">
-        {items.length === 0 && <div className="empty">No history yet</div>}
-        {items.map((it) => (
-          <button
-            key={it.id}
-            className={`sidebar-item ${it.id === activeId ? "active" : ""}`}
-            onClick={() => onSelect(it.id)}
-          >
-            {it.title || "Untitled"}
-          </button>
-        ))}
-      </div>
-    </aside>
-  );
-}
+import Sidebar from "./components/Sidebar";
+import useRecorder from "./components/useRecorder";
+import LoadingOverlay from "./components/LoadingOverlay";
 
 export default function App() {
-  const [tab, setTab] = useState("summary");
+  // 默认从 note 开始（Submit 前不显示 summary）
+  const [tab, setTab] = useState("note");
   const [note, setNote] = useState("");
   const [transcript, setTranscript] = useState("");
   const [summary, setSummary] = useState("");
@@ -83,34 +29,53 @@ export default function App() {
     return localStorage.getItem("darkMode") === "true";
   });
 
+  // ✅ 新增：是否已提交，用于控制 Summary 的显隐
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
   useEffect(() => {
     localStorage.setItem("darkMode", darkMode);
     document.body.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
+  const USE_MOCK = true; // 后端没好时置为 true
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const resp = await fetch("/api/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ note, transcript }),
-      });
-      const data = await resp.json();
-      setSummary(data.summary || "No summary from backend.");
-      const id = crypto.randomUUID();
-      const title = data.title || `Case ${new Date().toLocaleString()}`;
-      const newItem = { id, title, note, transcript, summary: data.summary || "" };
-      setSessions((prev) => [newItem, ...prev]);
-      setActiveId(id);
-      setTab("summary");
+      let data;
+      if (USE_MOCK) {
+        const resp = await fetch("/mock/submit.json");
+        data = await resp.json();
+      } else {
+        const resp = await fetch("/api/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note, transcript }),
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        data = await resp.json();
+      }
+      applyResult(data);
     } catch (e) {
       console.error(e);
-      alert("Submit failed.");
+      alert(`Submit failed.\n\n${e.message}\n(See console/Network for details)`);
     } finally {
       setLoading(false);
     }
   };
+
+  function applyResult(data) {
+    setSummary(data.summary || "No summary from backend.");
+    const id = crypto.randomUUID();
+    const title = data.title || `Case ${new Date().toLocaleString()}`;
+    const newItem = { id, title, note, transcript, summary: data.summary || "" };
+    setSessions((prev) => [newItem, ...prev]);
+    setActiveId(id);
+
+    // ✅ 提交成功：显示 Summary，并切换到 Summary
+    setIsSubmitted(true);
+    setTab("summary");
+  }
 
   const handleLoadFromHistory = (id) => {
     setActiveId(id);
@@ -119,6 +84,9 @@ export default function App() {
     setNote(s.note || "");
     setTranscript(s.transcript || "");
     setSummary(s.summary || "");
+
+    // ✅ 历史记录属于已提交：显示 Summary，切 Summary
+    setIsSubmitted(true);
     setTab("summary");
   };
 
@@ -127,7 +95,10 @@ export default function App() {
     setNote("");
     setTranscript("");
     setSummary("");
-    setTab("summary");
+
+    // ✅ 新建会话：隐藏 Summary，默认回到 Note
+    setIsSubmitted(false);
+    setTab("note");
   };
 
   return (
@@ -142,13 +113,9 @@ export default function App() {
       <main className="main">
         <header className="topbar">
           <div className="title">Generate Title</div>
+
+          {/* ✅ Submit 前仅显示 Note / Transcript */}
           <div className="tabs">
-            <button
-              className={`tab ${tab === "summary" ? "active" : ""}`}
-              onClick={() => setTab("summary")}
-            >
-              Summary
-            </button>
             <button
               className={`tab ${tab === "note" ? "active" : ""}`}
               onClick={() => setTab("note")}
@@ -161,8 +128,17 @@ export default function App() {
             >
               Transcript
             </button>
+            {/* ✅ Summary 显示在最右边；提交后才出现 */}
+            {isSubmitted && (
+              <button
+                className={`tab ${tab === "summary" ? "active" : ""}`}
+                onClick={() => setTab("summary")}
+              >
+                Summary
+              </button>
+            )}
           </div>
-          
+
           <div className="actions">
             {recState === "recording" ? (
               <button className="danger" onClick={stop}>Stop</button>
@@ -184,13 +160,19 @@ export default function App() {
             >
               {darkMode ? "Day Mode" : "Night Mode"}
             </button>
+
+
           </div>
         </header>
 
         <section className="panel">
-          {tab === "summary" && <Alsummary text={summary} />}
+          {tab === "summary" && isSubmitted && <Alsummary text={summary} />}
           {tab === "note" && (
-            <Note value={note} onChange={setNote} placeholder="911 switchboard operator could write note here" />
+            <Note
+              value={note}
+              onChange={setNote}
+              placeholder="911 switchboard operator could write note here"
+            />
           )}
           {tab === "transcript" && (
             <Transcript
@@ -200,6 +182,7 @@ export default function App() {
             />
           )}
         </section>
+
         {/* 测试用音频播放器 */}
         {audioBlob && (
           <div style={{ padding: "10px 16px" }}>
@@ -207,7 +190,10 @@ export default function App() {
             <audio controls src={URL.createObjectURL(audioBlob)} />
           </div>
         )}
-
+        
+        {loading && (
+          <LoadingOverlay text="Analyzing audio & generating summary..." />
+        )}
       </main>
     </div>
   );
