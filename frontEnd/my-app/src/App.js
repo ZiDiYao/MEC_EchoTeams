@@ -1,5 +1,5 @@
 // src/App.js
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import "./index.css";
 import Note from "./components/Note";
@@ -7,14 +7,51 @@ import Transcript from "./components/Transcript";
 import Alsummary from "./components/AIsummary";
 import Sidebar from "./components/Sidebar";
 import useRecorder from "./components/useRecorder";
-import LoadingOverlay from "./components/LoadingOverlay";
+
+/* 占位的音量条（等 Jeff 的真组件到位后替换） */
+function VoiceBarPlaceholder() {
+  return (
+    <div className="voicebar">
+      <div className="voicebar-wave" />
+      <span className="voicebar-text">Voice bar (coming soon)</span>
+    </div>
+  );
+}
+
+/* Summary 弹窗 */
+function SummaryModal({ open, onClose, text }) {
+  if (!open) return null;
+  return (
+    <div className="overlay">
+      <div className="modal">
+        <div className="modal-header">
+          <strong>Summary</strong>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="summary-box">{text || "No summary."}</div>
+      </div>
+    </div>
+  );
+}
+
+/* Loading 覆盖层 */
+function LoadingOverlay({ text = "Analyzing… please wait" }) {
+  return (
+    <div className="overlay" role="alert" aria-busy="true" aria-live="assertive">
+      <div className="overlay-card">
+        <div className="spinner" aria-hidden="true" />
+        <div className="overlay-text">{text}</div>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
-  // 默认从 note 开始（Submit 前不显示 summary）
-  const [tab, setTab] = useState("note");
   const [note, setNote] = useState("");
   const [transcript, setTranscript] = useState("");
   const [summary, setSummary] = useState("");
+  const [showSummary, setShowSummary] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const [sessions, setSessions] = useState(() => {
     const raw = localStorage.getItem("mec_sessions");
@@ -29,15 +66,12 @@ export default function App() {
     return localStorage.getItem("darkMode") === "true";
   });
 
-  // ✅ 新增：是否已提交，用于控制 Summary 的显隐
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
   useEffect(() => {
     localStorage.setItem("darkMode", darkMode);
     document.body.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  const USE_MOCK = true; // 后端没好时置为 true
+  const USE_MOCK = true;
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -71,10 +105,8 @@ export default function App() {
     const newItem = { id, title, note, transcript, summary: data.summary || "" };
     setSessions((prev) => [newItem, ...prev]);
     setActiveId(id);
-
-    // ✅ 提交成功：显示 Summary，并切换到 Summary
     setIsSubmitted(true);
-    setTab("summary");
+    setShowSummary(true); // 直接打开弹窗
   }
 
   const handleLoadFromHistory = (id) => {
@@ -84,10 +116,8 @@ export default function App() {
     setNote(s.note || "");
     setTranscript(s.transcript || "");
     setSummary(s.summary || "");
-
-    // ✅ 历史记录属于已提交：显示 Summary，切 Summary
-    setIsSubmitted(true);
-    setTab("summary");
+    setIsSubmitted(!!s.summary);
+    setShowSummary(!!s.summary); // 打开查看
   };
 
   const handleNew = () => {
@@ -95,10 +125,8 @@ export default function App() {
     setNote("");
     setTranscript("");
     setSummary("");
-
-    // ✅ 新建会话：隐藏 Summary，默认回到 Note
     setIsSubmitted(false);
-    setTab("note");
+    setShowSummary(false);
   };
 
   return (
@@ -114,86 +142,71 @@ export default function App() {
         <header className="topbar">
           <div className="title">Generate Title</div>
 
-          {/* ✅ Submit 前仅显示 Note / Transcript */}
-          <div className="tabs">
-            <button
-              className={`tab ${tab === "note" ? "active" : ""}`}
-              onClick={() => setTab("note")}
-            >
-              Note
-            </button>
-            <button
-              className={`tab ${tab === "transcript" ? "active" : ""}`}
-              onClick={() => setTab("transcript")}
-            >
-              Transcript
-            </button>
-            {/* ✅ Summary 显示在最右边；提交后才出现 */}
-            {isSubmitted && (
-              <button
-                className={`tab ${tab === "summary" ? "active" : ""}`}
-                onClick={() => setTab("summary")}
-              >
-                Summary
-              </button>
-            )}
-          </div>
+          {/* 左侧空隙占位，保证左右对齐美观，可按需移除 */}
+          <div style={{ flex: 1 }} />
 
           <div className="actions">
             {recState === "recording" ? (
-              <button className="danger" onClick={stop}>Stop</button>
+              <button className="danger" onClick={stop} disabled={loading}>Stop</button>
             ) : recState === "paused" ? (
-              <button onClick={resume}>Resume</button>
+              <button onClick={resume} disabled={loading}>Resume</button>
             ) : (
-              <button onClick={start}>Record</button>
+              <button onClick={start} disabled={loading}>Record</button>
             )}
 
             <button className="primary" onClick={handleSubmit} disabled={loading}>
               {loading ? "Loading..." : "Submit"}
             </button>
 
-            {/* 夜间模式切换 */}
             <button
               className="toggle-theme"
               onClick={() => setDarkMode((v) => !v)}
               title="Toggle dark mode"
+              disabled={loading}
             >
               {darkMode ? "Day Mode" : "Night Mode"}
             </button>
 
-
+            {/* Submit 后显示 Summary 入口（弹窗） */}
+            {isSubmitted && (
+              <button className="tab" onClick={() => setShowSummary(true)}>
+                Summary
+              </button>
+            )}
           </div>
         </header>
 
-        <section className="panel">
-          {tab === "summary" && isSubmitted && <Alsummary text={summary} />}
-          {tab === "note" && (
+        {/* 两栏布局：左 Note + 右 Transcript */}
+        <section className="two-col">
+          <div className="col left">
+            <VoiceBarPlaceholder />
             <Note
               value={note}
               onChange={setNote}
               placeholder="911 switchboard operator could write note here"
             />
-          )}
-          {tab === "transcript" && (
+          </div>
+
+          <div className="col right">
             <Transcript
               text={transcript}
-              onChange={(t) => setTranscript(t)}
-              placeholder="Here will display the text transcripted by record"
+              onChange={setTranscript}
+              placeholder="Transcript will appear here when recording is stopped."
             />
-          )}
+          </div>
         </section>
 
-        {/* 测试用音频播放器 */}
+        {/* 音频预览（可保留） */}
         {audioBlob && (
           <div style={{ padding: "10px 16px" }}>
             <p>🎧 录音预览：</p>
             <audio controls src={URL.createObjectURL(audioBlob)} />
           </div>
         )}
-        
-        {loading && (
-          <LoadingOverlay text="Analyzing audio & generating summary..." />
-        )}
+
+        {/* 弹窗与 Loading 覆盖层 */}
+        <SummaryModal open={showSummary} onClose={() => setShowSummary(false)} text={summary} />
+        {loading && <LoadingOverlay text="Analyzing audio & generating summary..." />}
       </main>
     </div>
   );
