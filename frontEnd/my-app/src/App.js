@@ -7,7 +7,6 @@ import Transcript from "./components/Transcript";
 import AIsummary from "./components/AIsummary";
 import Sidebar from "./components/Sidebar";
 import useRecorder from "./components/useRecorder";
-// 如果已经有 Jeff 的组件就解注释下一行，并把 USE_VOICEBARS = true
 import VoiceBars from "./components/voiceBar";
 
 /* 占位的音量条（等 Jeff 的真组件到位后替换） */
@@ -59,6 +58,7 @@ export default function App() {
     const raw = localStorage.getItem("mec_sessions");
     return raw ? JSON.parse(raw) : [];
   });
+
   const [activeId, setActiveId] = useState(() => {
     const raw = localStorage.getItem("mec_sessions");
     const arr = raw ? JSON.parse(raw) : [];
@@ -72,6 +72,8 @@ export default function App() {
     return localStorage.getItem("darkMode") === "true";
   });
 
+  
+
   useEffect(() => {
     localStorage.setItem("darkMode", darkMode);
     document.body.classList.toggle("dark", darkMode);
@@ -81,6 +83,7 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("mec_sessions", JSON.stringify(sessions));
   }, [sessions]);
+  
 
   const USE_MOCK = true;
   const USE_VOICEBARS = true; // 如果已经有 Jeff 的 VoiceBars，改成 true 并引入
