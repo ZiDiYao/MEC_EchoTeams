@@ -1,11 +1,10 @@
 // src/components/Transcript.jsx
 import React, { useRef, useState } from 'react';
-import { pipeline, env} from '@xenova/transformers';
+import { pipeline, env } from '@xenova/transformers';
 
 env.allowLocalModels = false;
 env.useBrowserCache = false;
 console.log("Transformers version:", require("@xenova/transformers/package.json").version);
-
 
 let transcriber = null;
 async function loadModel() {
@@ -17,16 +16,13 @@ async function loadModel() {
   return transcriber;
 }
 
-
 export default function Transcript({ text, onChange, placeholder }) {
   const [recording, setRecording] = useState(false);
   const [status, setStatus] = useState("Ready");
-  const [transcript, setTranscript] = useState("");
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
 
   async function startRecording() {
-    setTranscript("");
     setStatus("🔴 Recording...");
     setRecording(true);
 
@@ -45,61 +41,69 @@ export default function Transcript({ text, onChange, placeholder }) {
   }
 
   async function stopRecording() {
-    setStatus(" Processing...");
+    setStatus("Processing...");
     setRecording(false);
-
     const mr = mediaRecorderRef.current;
     if (!mr) return;
-    mr.stop();
 
     mr.onstop = async () => {
-      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-      const arrayBuffer = await blob.arrayBuffer();
+      try {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const arrayBuffer = await blob.arrayBuffer();
 
-      //decode to PCM
-      const audioContext = new AudioContext();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        // decode -> resample 16kHz mono
+        const audioContext = new AudioContext();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        const frameCount = Math.ceil(audioBuffer.duration * 16000);
+        const offlineCtx = new OfflineAudioContext(1, frameCount, 16000);
+        const source = offlineCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(offlineCtx.destination);
+        source.start(0);
+        const resampled = await offlineCtx.startRendering();
+        await audioContext.close();
 
-      // subsampliing to 16kHz
-      const offlineCtx = new OfflineAudioContext(1, audioBuffer.duration * 16000, 16000);
-      const source = offlineCtx.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(offlineCtx.destination);
-      source.start(0);
-      const resampled = await offlineCtx.startRendering();
+        const pcm = resampled.getChannelData(0);
 
-      const pcm = resampled.getChannelData(0);
-      
-
-      try { 
         const whisper = await loadModel();
         const output = await whisper(pcm);
         console.log("Output:", output);
-        setTranscript(output.text);
+
+        // ✅ 把识别结果回传给父组件
+        onChange(output.text || "");
+        setStatus("Done");
       } catch (err) {
         console.error(err);
         setStatus("❌ Error: " + err.message);
+      } finally {
+        // 关掉麦克风
+        if (mr && mr.stream) {
+          mr.stream.getTracks().forEach(t => t.stop());
+        }
       }
     };
+
+    mr.stop();
   }
 
   return (
     <div>
       <p>{status}</p>
-      <div style={{ marginBottom: "12px" }}>
+      <div style={{ marginBottom: 12 }}>
         {!recording ? (
           <button onClick={startRecording}>Start</button>
         ) : (
           <button onClick={stopRecording}>Stop</button>
         )}
       </div>
+
+      {/* ✅ 受控：用父组件的 text */}
       <textarea
         className="big-input"
-        value={transcript}
+        value={text}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={"Transcript will appear here when recording is stopped."}
+        placeholder={placeholder || "Transcript will appear here when recording is stopped."}
       />
     </div>
-    
   );
 }
