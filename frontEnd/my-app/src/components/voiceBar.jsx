@@ -47,7 +47,7 @@ export default function VoiceBars() {
         const adjusted =
           smoothVolRef.current < threshold ? 0 : smoothVolRef.current - threshold;
 
-        setVolume(adjusted * 4); // 放大灵敏度
+        setVolume(adjusted * 4); 
         setIsSpeaking(adjusted > 0);
         animationId = requestAnimationFrame(calcVolume);
       };
@@ -79,9 +79,8 @@ export default function VoiceBars() {
       }}
     >
       {dots.map((_, i) => {
-        // 每个点有随机的 phase 偏移，让波动不完全一致
         const phase = Math.sin(Date.now() / 150 + i * 0.8);
-        const scaleY = 1 + volume * (2 + phase); // 随音量波动拉伸
+        const scaleY = 1 + volume * (2 + phase);
         return (
           <div
             key={i}

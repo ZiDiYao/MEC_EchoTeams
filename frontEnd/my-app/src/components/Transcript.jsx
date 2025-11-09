@@ -11,7 +11,7 @@ async function loadModel() {
   if (!transcriber) {
     console.log("Loading Whisper model...");
     transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base.en');
-    console.log("Model loaded ✅");
+    console.log("Model loaded");
   }
   return transcriber;
 }
@@ -69,14 +69,13 @@ export default function Transcript({ text, onChange, placeholder }) {
         const output = await whisper(pcm);
         console.log("Output:", output);
 
-        // ✅ 把识别结果回传给父组件
+  
         onChange(output.text || "");
         setStatus("Done");
       } catch (err) {
         console.error(err);
         setStatus("❌ Error: " + err.message);
       } finally {
-        // 关掉麦克风
         if (mr && mr.stream) {
           mr.stream.getTracks().forEach(t => t.stop());
         }
@@ -97,7 +96,6 @@ export default function Transcript({ text, onChange, placeholder }) {
         )}
       </div>
 
-      {/* ✅ 受控：用父组件的 text */}
       <textarea
         className="big-input"
         value={text}

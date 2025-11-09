@@ -3,10 +3,9 @@ import { useEffect, useRef, useState } from "react";
 export default function useRecorder() {
   const [recState, setRecState] = useState("idle"); // idle | recording | paused | stopped
   const [audioBlob, setAudioBlob] = useState(null);
-  const mediaRecorderRef = useRef(null); // 用 ref 避免不必要的重渲染
+  const mediaRecorderRef = useRef(null); 
   const chunksRef = useRef([]);
 
-  // 释放资源（组件卸载或停止时）
   useEffect(() => {
     return () => {
       try {
@@ -24,10 +23,8 @@ export default function useRecorder() {
     setAudioBlob(null);
     chunksRef.current = [];
 
-    // 申请麦克风
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    // 一些浏览器需要明确 mimeType
     let options = {};
     if (MediaRecorder.isTypeSupported?.("audio/webm")) {
       options.mimeType = "audio/webm";
