@@ -1,6 +1,12 @@
 # MEC-EchoTeam: Emergency AI Assistant  
 > “When disaster strikes, we don’t panic — we deploy.”  
 
+## Authors
+
+**ZiDi Yao**, **Ke Ma**, **ZhiChong Lin**
+
+McMaster University • Sun NOV 9 2025  
+
 
 ## Tech Stack
 
@@ -109,6 +115,7 @@ These screenshots show the structure and user flow of the system interface.
 |![History example](./History02.jpg)| The history example02, which is more detailed|
 
 ---
+
 
 
 
