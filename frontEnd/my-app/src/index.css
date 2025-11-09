@@ -11,3 +11,60 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* ======= 夜间模式 ======= */
+body.dark, .app-shell.dark {
+  background-color: #121212;
+  color: #e5e5e5;
+}
+
+.app-shell.dark .sidebar {
+  background-color: #1e1e1e;
+  border-right-color: #333;
+}
+.app-shell.dark .sidebar-item {
+  background-color: #1e1e1e;
+  border-color: #333;
+  color: #e5e5e5;
+}
+.app-shell.dark .sidebar-item.active {
+  background-color: #2a2a2a;
+  border-color: #4f7cff;
+}
+
+.app-shell.dark .main {
+  background-color: #121212;
+}
+.app-shell.dark .topbar {
+  border-bottom-color: #333;
+}
+.app-shell.dark .tab {
+  background-color: #1e1e1e;
+  border-color: #444;
+  color: #e5e5e5;
+}
+.app-shell.dark .tab.active {
+  background-color: #2a2a2a;
+  border-color: #999;
+}
+.app-shell.dark .big-input, 
+.app-shell.dark .summary-box {
+  background-color: #1b1b1b;
+  color: #e5e5e5;
+  border-color: #333;
+}
+.app-shell.dark .primary {
+  background-color: #4f7cff;
+  color: #fff;
+}
+.app-shell.dark .danger {
+  background-color: #b91c1c;
+}
+.app-shell.dark .toggle-theme {
+  background: transparent;
+  color: #ddd;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+}
+
