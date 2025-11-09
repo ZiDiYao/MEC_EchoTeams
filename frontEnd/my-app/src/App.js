@@ -1,4 +1,3 @@
-// src/App.js
 import { useEffect, useState } from "react";
 import "./App.css";
 import "./index.css";
@@ -9,7 +8,6 @@ import Sidebar from "./components/Sidebar";
 import useRecorder from "./components/useRecorder";
 import VoiceBars from "./components/voiceBar";
 
-/* 占位的音量条（等 Jeff 的真组件到位后替换） */
 function VoiceBarPlaceholder() {
   return (
     <div className="voicebar">
@@ -19,7 +17,6 @@ function VoiceBarPlaceholder() {
   );
 }
 
-/* Summary 弹窗 */
 function SummaryModal({ open, onClose, text }) {
   if (!open) return null;
   return (
@@ -35,7 +32,6 @@ function SummaryModal({ open, onClose, text }) {
   );
 }
 
-/* Loading 覆盖层 */
 function LoadingOverlay({ text = "Analyzing… please wait" }) {
   return (
     <div className="overlay" role="alert" aria-busy="true" aria-live="assertive">
@@ -57,7 +53,6 @@ function formatTime(iso) {
   try { return new Date(iso).toLocaleString(); } catch { return "Unknown time"; }
 }
 
-/** 统一规整后端结果 -> { title, summary }（标题=电话+事件+时间戳） */
 function normalizeResult(raw, { phoneNumber, transcript }) {
   const incidentType = raw.incidentType || raw.type || raw.category || "Case";
   const address      = raw.address || raw.location || "";
@@ -67,12 +62,10 @@ function normalizeResult(raw, { phoneNumber, transcript }) {
   const timeReported = raw.timeReported || new Date().toISOString();
   const aiSummary    = raw.summary || raw.incidentDescription || "";
 
-  // === Title：Phone · Incident · LocalTime ===
   const phoneForTitle = safe(phoneNumber, "No-Phone");
   const timeForTitle  = formatTime(timeReported);
   const title = `${phoneForTitle} · ${incidentType} · ${timeForTitle}`;
 
-  // === Summary：结构化要点（有则填、无则略） ===
   const lines = [
     `# ${incidentType}`,
     address ? `📍 Address: ${address}` : null,
@@ -81,10 +74,10 @@ function normalizeResult(raw, { phoneNumber, transcript }) {
     confidence !== undefined ? `✅ Confidence: ${confidence}%` : null,
     `🕒 Reported: ${formatTime(timeReported)}`,
     "",
-    "## AI Summary",
+    "- AI Summary",
     aiSummary || "No summary from backend.",
     "",
-    "## Original Transcript (short)",
+    "- Original Transcript (short)",
     transcript?.slice(0, 400) ? transcript.slice(0, 400) + (transcript.length > 400 ? " …" : "") : "N/A",
   ].filter(Boolean);
 
@@ -125,18 +118,17 @@ export default function App() {
     document.body.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  // 会把历史记录持久化
   useEffect(() => {
     localStorage.setItem("mec_sessions", JSON.stringify(sessions));
   }, [sessions]);
   
 
   const USE_MOCK = false;
-  const USE_VOICEBARS = true; // 如果已经有 Jeff 的 VoiceBars，改成 true 并引入
+  const USE_VOICEBARS = true; 
 
   const handleSubmit = async () => {
     try {
-      // ===== 1️⃣ 前端校验 =====
+
       if (!transcript || !transcript.trim()) {
         alert("Transcript is empty. Please record or paste text before submitting.");
         return;
@@ -145,7 +137,7 @@ export default function App() {
       setLoading(true);
       let data;
 
-      // ===== 2️⃣ MOCK 或真实请求 =====
+
       if (USE_MOCK) {
         const resp = await fetch("/mock/submit.json");
         data = await resp.json();
@@ -165,15 +157,13 @@ export default function App() {
           throw new Error(`HTTP ${resp.status}${text ? " - " + text : ""}`);
         }
 
-        data = await resp.json(); // ✅ 这里不再用 const，避免作用域错误
+        data = await resp.json(); 
       }
 
       console.log("[/api/analyze] response:", data);
 
-      // ===== 3️⃣ 转换后端返回为前端展示格式 =====
       const { title, summary } = normalizeResult(data, { phoneNumber, transcript });
 
-      // ===== 4️⃣ 更新前端状态 =====
       setSummary(summary);
       const id = crypto.randomUUID();
       const newItem = { id, title, note, transcript, summary, createdAt: new Date().toISOString() };
@@ -242,7 +232,7 @@ export default function App() {
               <VoiceBars />
                 </div> 
                 <div /> 
-              </> // 占位，避免未引入时报错
+              </> 
             ) : (
               <VoiceBarPlaceholder />
             )}
@@ -277,10 +267,8 @@ export default function App() {
           </div>
         </header>
 
-        {/* 两栏布局：左 Note + 右 Transcript */}
         <section className="two-col">
           <div className="col left">
-            {/* 如果上面 header 已经有 VoiceBar，就可以把这里的 Placeholder 删掉 */}
             <Note
               value={note}
               onChange={setNote}
@@ -297,7 +285,6 @@ export default function App() {
           </div>
         </section>
 
-        {/* 音频预览 */}
         {audioBlob && (
           <div style={{ padding: "10px 16px" }}>
             <p>🎧 录音预览：</p>
@@ -305,7 +292,6 @@ export default function App() {
           </div>
         )}
 
-        {/* 弹窗与 Loading 覆盖层 */}
         <SummaryModal open={showSummary} onClose={() => setShowSummary(false)} text={summary} />
         {loading && <LoadingOverlay text="Analyzing audio & generating summary..." />}
       </main>

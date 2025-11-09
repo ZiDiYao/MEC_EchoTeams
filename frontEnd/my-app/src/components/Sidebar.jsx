@@ -4,8 +4,7 @@ import SummaryModel from "./SummaryModel";
 export default function Sidebar({ items, activeId, onSelect, onNew }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedReport, setSelectedReport] = useState(null); // 🆕 保存点击的记录详情
-
+  const [selectedReport, setSelectedReport] = useState(null);
   useEffect(() => {
     fetch("http://localhost:8080/api/history")
       .then((res) => res.json())
@@ -19,7 +18,7 @@ export default function Sidebar({ items, activeId, onSelect, onNew }) {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("❌ Fetch error:", err);
+        console.error(" Fetch error:", err);
         setLoading(false);
       });
   }, []);
@@ -31,7 +30,7 @@ export default function Sidebar({ items, activeId, onSelect, onNew }) {
       console.log("📄 Fetched report:", data);
       setSelectedReport(data);
     } catch (err) {
-      console.error("❌ Failed to fetch report:", err);
+      console.error("Failed to fetch report:", err);
     }
   }
 
