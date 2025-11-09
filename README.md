@@ -27,11 +27,13 @@ Right now, only **DeepSeek API** is enabled (because OpenAI tokens are priced li
 - Spring Boot version **3.5.7**
 
 #### Run Command ( Backend) 
-./mvnw spring-boot:run ( It meight be slightly different between Mac and Windows, But I know you will fix it !) 
+./mvnw spring-boot:run 
+-( It meight be slightly different between Mac and Windows, But I know you will fix it !) 
 
 ### Run Command ( FrontEnd) 
-npm install
-npm start
+-npm install
+-npm start
+
 
 
 
