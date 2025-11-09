@@ -105,8 +105,11 @@ These screenshots show the structure and user flow of the system interface.
 | ![Layout 1](./layout01.jpg) | Main interface — home screen and input section. |
 | ![Layout 2](./layout02.jpg) | Data Processing by LLM |
 |![Result Example](./result_return01.jpg)| The result return|
+|![History example](./history01.jpg)| The history example01|
+|![History example](./history02.jpg)| The history example02, which is more detailed|
 
 ---
+
 
 
 
