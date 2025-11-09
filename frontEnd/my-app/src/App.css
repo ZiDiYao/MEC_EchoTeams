@@ -1,43 +1,283 @@
-/* 布局 */
-.app-shell { display: flex; height: 100vh; width: 100vw; }
+/* ------------------- 基础布局 ------------------- */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
 
 .sidebar {
-  width: 260px; border-right: 1px solid #e5e7eb; padding: 12px; box-sizing: border-box;
-  display: flex; flex-direction: column; gap: 10px; background:#fafafa;
+  width: 260px;
+  border-right: 1px solid #e5e7eb;
+  padding: 12px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fafafa;
 }
-.sidebar-header { font-weight: 700; }
-.new-btn { border: 1px solid #ddd; padding: 8px 10px; border-radius: 10px; background:#fff; cursor:pointer; }
-.sidebar-list { display: flex; flex-direction: column; gap: 6px; overflow: auto; }
+
+.sidebar-header {
+  font-weight: 700;
+}
+
+.new-btn {
+  border: 1px solid #ddd;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.sidebar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: auto;
+}
+
 .sidebar-item {
-  text-align: left; padding: 10px 12px; border:1px solid #eee; border-radius:12px; background:#fff; cursor:pointer;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
 }
-.sidebar-item.active { border-color:#8ab4ff; background:#eef4ff; }
-.empty { color:#999; padding: 8px; }
 
-.main { flex: 1; display: flex; flex-direction: column; }
+.sidebar-item.active {
+  border-color: #8ab4ff;
+  background: #eef4ff;
+}
+
+.empty {
+  color: #999;
+  padding: 8px;
+}
+
+/* ------------------- 主内容区 ------------------- */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ------------------- 顶部栏 ------------------- */
 .topbar {
-  display:flex; align-items:center; justify-content: space-between;
-  padding: 12px 16px; border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
 }
-.title { font-weight: 600; }
-.tabs { display: flex; gap: 12px; }
-.tab { padding: 8px 14px; border:1px solid #ddd; border-radius: 10px; background:#fff; cursor:pointer; }
-.tab.active { border-color:#000; font-weight: 600; }
 
-.actions { display:flex; gap:10px; }
+.title {
+  font-weight: 600;
+  margin-right: 16px;
+}
+
+/* 左侧 tab（Note / Transcript） */
+.tabs-left {
+  display: flex;
+  gap: 12px;
+}
+
+/* 右侧按钮区（Record / Submit / Night Mode / Summary） */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* ------------------- 通用按钮 ------------------- */
+.tab {
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tab:hover {
+  background: #f5f5f5;
+}
+
+.tab.active {
+  border-color: #000;
+  font-weight: 600;
+}
+
+/* 主操作按钮 */
 .actions .primary {
-  background:#111; color:#fff; border:none; padding:8px 14px; border-radius:10px; cursor:pointer;
-}
-.actions .danger {
-  background:#e11d48; color:#fff; border:none; padding:8px 14px; border-radius:10px; cursor:pointer;
+  background: #111;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
-.panel { padding: 16px; height: 100%; }
-.big-input {
-  width: 100%; height: calc(100vh - 160px);
-  border:1px solid #ddd; border-radius: 12px; padding:12px; font-size: 14px; line-height: 1.5; resize: none;
+.actions .primary:hover {
+  background: #333;
 }
+
+/* 录音中按钮 */
+.actions .danger {
+  background: #e11d48;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.actions .danger:hover {
+  background: #be123c;
+}
+
+/* 夜间模式切换 */
+.toggle-theme {
+  border: 1px solid #ddd;
+  background: #fff;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-theme:hover {
+  background: #f5f5f5;
+}
+
+/* ------------------- 内容面板 ------------------- */
+.panel {
+  padding: 16px;
+  height: 100%;
+}
+
+.big-input {
+  width: 100%;
+  height: calc(100vh - 160px);
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+}
+
 .summary-box {
-  width: 100%; height: calc(100vh - 160px);
-  border:1px solid #ddd; border-radius: 12px; padding:16px; overflow:auto; white-space: pre-wrap;
+  width: 100%;
+  height: calc(100vh - 160px);
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 16px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+/* ------------------- 夜间模式 ------------------- */
+body.dark,
+.app-shell.dark {
+  background: #111;
+  color: #eee;
+}
+
+.dark .sidebar {
+  background: #1a1a1a;
+  border-right: 1px solid #333;
+}
+
+.dark .tab {
+  background: #222;
+  border-color: #444;
+  color: #eee;
+}
+
+.dark .tab.active {
+  border-color: #aaa;
+}
+
+.dark .primary {
+  background: #2563eb;
+}
+
+.dark .danger {
+  background: #dc2626;
+}
+
+.dark .toggle-theme {
+  background: #222;
+  border-color: #444;
+  color: #eee;
+}
+
+/* =================== Loading Overlay =================== */
+.overlay {
+  position: fixed;
+  inset: 0;                  /* top:0 right:0 bottom:0 left:0 */
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;            /* 盖住一切 */
+  pointer-events: all;       /* 阻止底层交互 */
+}
+
+.overlay-card {
+  min-width: 260px;
+  max-width: 90vw;
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #111;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e5e7eb;   /* 浅灰 */
+  border-top-color: #111;      /* 深色 */
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.overlay-text {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* 转圈动画 */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 夜间模式适配 */
+.dark .overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.dark .overlay-card {
+  background: #1e1e1e;
+  color: #eee;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.dark .spinner {
+  border-color: #333;
+  border-top-color: #e5e7eb;
+}
+
+/* 无障碍：用户偏好减少动效时禁用旋转 */
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
 }

@@ -1,0 +1,11 @@
+{
+  "title": "Demo Case - Fire Report",
+  "summary": "Fire reported at 123 Main Street. 1 victim, urgency 5.",
+  "incidentType": "Fire",
+  "address": "123 Main Street",
+  "isFire": true,
+  "victimCount": 1,
+  "urgencyLevel": 5,
+  "confidence": 93,
+  "processedBy": "AI Analyzer v1.0"
+}
