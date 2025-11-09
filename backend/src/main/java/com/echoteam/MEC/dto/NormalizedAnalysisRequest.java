@@ -1,23 +1,20 @@
 package com.echoteam.MEC.dto;
 
 import com.echoteam.MEC.common.LLMCode;
-import java.sql.Timestamp;
+import java.time.Instant;
 
-/**
- * Normalized request after preprocessing & enrichment.
- */
 public class NormalizedAnalysisRequest {
 
     private String requestId;
     private String transcript;
     private String phoneNumber;
-    private Timestamp timeReported;
+    private Instant timeReported;
     private LLMCode llmService;
 
     public NormalizedAnalysisRequest() {}
 
     public NormalizedAnalysisRequest(String requestId, String transcript, String phoneNumber,
-                                     Timestamp timeReported, LLMCode llmService) {
+                                     Instant timeReported, LLMCode llmService) {
         this.requestId = requestId;
         this.transcript = transcript;
         this.phoneNumber = phoneNumber;
@@ -34,8 +31,8 @@ public class NormalizedAnalysisRequest {
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public Timestamp getTimeReported() { return timeReported; }
-    public void setTimeReported(Timestamp timeReported) { this.timeReported = timeReported; }
+    public Instant getTimeReported() { return timeReported; }
+    public void setTimeReported(Instant timeReported) { this.timeReported = timeReported; }
 
     public LLMCode getLlmService() { return llmService; }
     public void setLlmService(LLMCode llmService) { this.llmService = llmService; }
