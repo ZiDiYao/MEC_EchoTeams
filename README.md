@@ -107,8 +107,8 @@ These screenshots show the structure and user flow of the system interface.
 
 | Layout | Description |
 |---------|--------------|
-| ![Layout 1](../layout01.jpg) | Main interface — home screen and input section. |
-| ![Layout 2](../layout02.jpg) | Data visualization and historical record view. |
+| ![Layout 1](./layout01.jpg) | Main interface — home screen and input section. |
+| ![Layout 2](./layout02.jpg) | Data visualization and historical record view. |
 
 ---
 
@@ -116,7 +116,8 @@ These screenshots show the structure and user flow of the system interface.
 
 Below is an example of what the backend LLM analysis result looks like after processing an emergency call.
 
-![Result Example](../result_return01.jpg)
+![Result Example](./result_return01.jpg)
+
 
 
 
