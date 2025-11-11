@@ -32,6 +32,8 @@ You Must upload the phone Number !!!!!
 - Java **JDK 17+**
 - Maven (optional if using IDE run config)
 - Spring Boot version **3.5.7**
+- noode: **20.19.4**
+- npm: **10.8.2**
 
 #### Run Command ( Backend) 
 ./mvnw spring-boot:run  
@@ -116,6 +118,7 @@ These screenshots show the structure and user flow of the system interface.
 |![History example](./History02.jpg)| The history example02, which is more detailed|
 
 ---
+
 
 
 
