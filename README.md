@@ -3,7 +3,7 @@
 
 ## Authors
 
-**ZiDi Yao**, **Ke Ma**, **ZhiChong Lin**
+**ZiDi Yao**, **Ke Ma**, **ZhiCong Lin**
 
 McMaster University • Sun NOV 9 2025  
 
@@ -116,6 +116,7 @@ These screenshots show the structure and user flow of the system interface.
 |![History example](./History02.jpg)| The history example02, which is more detailed|
 
 ---
+
 
 
 
